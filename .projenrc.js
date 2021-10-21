@@ -2,7 +2,7 @@ const { AwsCdkConstructLibrary } = require('projen');
 const project = new AwsCdkConstructLibrary({
   author: 'Brian Caffey',
   authorAddress: 'briancaffey2010@gmail.com',
-  cdkVersion: '1.110.1',
+  cdkVersion: '1.128.0',
   defaultReleaseBranch: 'main',
   name: 'jenkins-cdk',
   repositoryUrl: 'https://github.com/briancaffey2010/jenkins-cdk.git',
