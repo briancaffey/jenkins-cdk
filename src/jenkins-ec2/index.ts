@@ -119,7 +119,7 @@ export class JenkinsEc2 extends cdk.Construct {
     // add statement to instance policy
     instance.addToRolePolicy(ec2PolicyStatement);
 
-    const JENKINS_AGENT_SG_NAME = 'jenkins_agent_sg'
+    const JENKINS_AGENT_SG_NAME = 'jenkins_agent_sg';
 
     // create security group for jenkins agent
     const jenkinsAgentSG = new ec2.SecurityGroup(scope, 'jenkinsAgentSG', {
