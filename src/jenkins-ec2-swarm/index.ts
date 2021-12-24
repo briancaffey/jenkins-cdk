@@ -89,10 +89,15 @@ export class JenkinsEc2Swarm extends cdk.Construct {
 #!/bin/bash -xe
 yum update -y aws-cfn-bootstrap # good practice - always do this.
 yum update -y
+echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+echo "nameserver 8.8.4.4" >> /etc/resolv.conf
 
 # mount efs file system to /data
 sudo mkdir -p /data/jenkins
 sudo mkdir -p /certs/jenkins
+sudo mkdir -p /data/traefik
+
+sudo chown -R 1000:1000 /data/jenkins
 
 echo "${efsFileSystem.fileSystemId}.efs.${stackRegion}.amazonaws.com:/ /data nfs defaults,_netdev 0 0" >> /etc/fstab
 sudo mount -fav
