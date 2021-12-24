@@ -284,5 +284,11 @@ docker stack deploy --with-registry-auth -c stack.yml stack
       value: `https://${props.hostName}`,
       exportName: 'JenkinsUrl',
     });
+
+    // jenkins admin password
+    new cdk.CfnOutput(this, 'JenkinsAdminPassword', {
+      value: `ssh -i "~/.ssh/${props.keyPairName}.pem" ec2-user@${instance.instancePublicDnsName} docker exec $(docker ps -q --filter "label=com.docker.swarm.service.name=stack_jenkins") cat /var/jenkins_home/secrets/initialAdminPassword`,
+      exportName: 'JenkinsAdminPassword',
+    });
   }
 }
