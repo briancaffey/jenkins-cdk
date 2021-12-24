@@ -212,11 +212,11 @@ docker stack deploy --with-registry-auth -c stack.yml stack
       securityGroup: ec2SecurityGroup,
       userData,
       init,
-      // initOptions: {
-      //   configSets: ['application'],
-      //   timeout: cdk.Duration.minutes(10),
-      //   includeUrl: true,
-      // },
+      initOptions: {
+        configSets: ['application'],
+        timeout: cdk.Duration.minutes(10),
+        includeUrl: true,
+      },
     });
 
     // add AmazonEC2ContainerRegistryReadOnly role to the instance
@@ -245,5 +245,10 @@ docker stack deploy --with-registry-auth -c stack.yml stack
       target: route53.RecordTarget.fromIpAddresses(instance.instancePublicIp),
     });
 
+    // Use this command to SSH to the machine
+    new cdk.CfnOutput(this, 'Ec2InstanceSshCommand', {
+      description: 'Use this command to SSH to the machine',
+      value: `ssh -i "~/.ssh/${props.keyPairName}.pem" ec2-user@${instance.instancePublicDnsName}`,
+    });
   }
 }

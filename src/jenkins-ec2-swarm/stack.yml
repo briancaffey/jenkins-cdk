@@ -39,7 +39,7 @@ services:
     image: docker:dind
     environment:
       - DOCKER_TLS_CERTDIR=/certs
-    volume:
+    volumes:
       - /data/jenkins/data:/var/jenkins_home
       - /data/jenkins/certs:/certs/client
     networks:

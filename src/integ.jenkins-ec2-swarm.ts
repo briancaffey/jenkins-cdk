@@ -12,8 +12,8 @@ const stack = new cdk.Stack(app, 'JenkinsEc2Stack', { env });
 
 const props: JenkinsEc2SwarmProps = {
   keyPairName: process.env.KEY_PAIR_NAME!,
-  hostName: process.env.HOSTED_ZONE_NAME!,
-  zoneName: process.env.JENKINS_HOSTNAME!,
+  hostName: process.env.JENKINS_HOSTNAME!,
+  zoneName: process.env.HOSTED_ZONE_NAME!,
 };
 
 const construct = new JenkinsEc2Swarm(stack, 'JenkinsEc2Example', props);
