@@ -91,7 +91,9 @@ yum update -y aws-cfn-bootstrap # good practice - always do this.
 yum update -y
 
 # mount efs file system to /data
-sudo mkdir -p /data/jenkins/{data,certs}
+sudo mkdir -p /data/jenkins
+sudo mkdir -p /certs/jenkins
+
 echo "${efsFileSystem.fileSystemId}.efs.${stackRegion}.amazonaws.com:/ /data nfs defaults,_netdev 0 0" >> /etc/fstab
 sudo mount -fav
 
@@ -148,7 +150,7 @@ interval=5
       ec2.InitCommand.shellCommand('usermod -a -G docker ec2-user', { key: 'docker_for_ec2_user' }),
     ]));
 
-    const stackFile = props.stackFileUri ?? 'https://raw.githubusercontent.com/briancaffey/jenkins-cdk/main/src/jenkins-ec2-swarm/stack.yml';
+    const stackFile = props.stackFileUri ?? 'https://raw.githubusercontent.com/briancaffey/jenkins-cdk/dev/src/jenkins-ec2-swarm/stack.yml';
     const contentStringInstallApplication = `
 #!/bin/bash
 
@@ -156,7 +158,22 @@ interval=5
 curl ${stackFile} -o stack.yml
 
 docker swarm init
-docker network create --driver=overlay traefik-public
+docker network create --driver=overlay --attachable traefik-public
+
+## docker:dind
+docker run \
+  --name jenkins-docker \
+  --rm \
+  --detach \
+  --privileged \
+  --network traefik-public \
+  --network-alias docker \
+  --env DOCKER_TLS_CERTDIR=/certs \
+  --volume /certs/jenkins:/certs/client \
+  --volume /data/jenkins:/var/jenkins_home \
+  --publish 2376:2376 \
+  docker:dind \
+  --storage-driver overlay2
 
 # export environment variables for docker stack deploy command
 export JENKINS_IMAGE=${jenkinsImage ? jenkinsImage.imageUri : JENKINS_DEFAULT_IMAGE}

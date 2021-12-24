@@ -35,16 +35,6 @@ services:
         - "traefik.http.services.redirect-service.loadbalancer.server.port=80"
         - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
-  docker:
-    image: docker:dind
-    environment:
-      - DOCKER_TLS_CERTDIR=/certs
-    volumes:
-      - /data/jenkins/data:/var/jenkins_home
-      - /data/jenkins/certs:/certs/client
-    networks:
-      - traefik-public
-
   jenkins:
     image: ${JENKINS_IMAGE}
     environment:
@@ -55,7 +45,7 @@ services:
       - 8080:8080
       - 50000:50000
     volumes:
-      - /data/jenkins/data:/var/jenkins_home
+      - /data/jenkins:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - traefik-public
