@@ -60,7 +60,7 @@ services:
         - "traefik.http.routers.jenkins-web.rule=Host(`${JENKINS_HOSTNAME}`)"
         - "traefik.http.routers.jenkins-web.entrypoints=websecure"
         - "traefik.http.routers.jenkins-web.tls.certresolver=letsencryptresolver"
-        - "traefik.http.services.jenkins-web.loadbalancer.server.port=80"
+        - "traefik.http.services.jenkins-web.loadbalancer.server.port=8080"
 
 networks:
   traefik-public:

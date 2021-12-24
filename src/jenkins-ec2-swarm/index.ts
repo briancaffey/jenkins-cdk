@@ -252,7 +252,7 @@ docker stack deploy --with-registry-auth -c stack.yml stack
     };
 
     /**
-     * Route 53
+     * Route 53 - Hosted Zone
      */
     const hostedZone = route53.HostedZone.fromLookup(scope, 'hosted-zone', {
       domainName: props.zoneName,
@@ -271,6 +271,18 @@ docker stack deploy --with-registry-auth -c stack.yml stack
     new cdk.CfnOutput(this, 'Ec2InstanceSshCommand', {
       description: 'Use this command to SSH to the machine',
       value: `ssh -i "~/.ssh/${props.keyPairName}.pem" ec2-user@${instance.instancePublicDnsName}`,
+    });
+
+    // jenkins hostname
+    new cdk.CfnOutput(this, 'JenkinsHostName', {
+      value: props.hostName,
+      exportName: 'JenkinsHostName',
+    });
+
+    // jenkins url
+    new cdk.CfnOutput(this, 'JenkinsUrl', {
+      value: `https://${props.hostName}`,
+      exportName: 'JenkinsUrl',
     });
   }
 }
