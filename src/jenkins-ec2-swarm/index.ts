@@ -155,15 +155,25 @@ interval=5
       ec2.InitCommand.shellCommand('usermod -a -G docker ec2-user', { key: 'docker_for_ec2_user' }),
     ]));
 
-    const stackFile = props.stackFileUri ?? 'https://raw.githubusercontent.com/briancaffey/jenkins-cdk/dev/src/jenkins-ec2-swarm/stack.yml';
+    const stackFile = props.stackFileUri ?? 'https://raw.githubusercontent.com/briancaffey/jenkins-cdk/refactor-docker/src/jenkins-ec2-swarm/stack.yml';
     const contentStringInstallApplication = `
 #!/bin/bash
 
 # download the stack.yml file
 curl ${stackFile} -o stack.yml
 
+# export environment variables for docker stack deploy command
+export JENKINS_IMAGE=${jenkinsImage ? jenkinsImage.imageUri : JENKINS_DEFAULT_IMAGE}
+export JENKINS_HOSTNAME=${props.hostName}
+
 docker swarm init
 docker network create --driver=overlay --attachable traefik-public
+
+# login to ecr - needed for custom jenkins images
+aws ecr get-login-password --region ${stackRegion} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${stackRegion}.amazonaws.com
+
+# deploy docker stack
+docker stack deploy --with-registry-auth -c stack.yml stack
 
 ## docker:dind
 docker run \
@@ -180,15 +190,26 @@ docker run \
   docker:dind \
   --storage-driver overlay2
 
-# export environment variables for docker stack deploy command
-export JENKINS_IMAGE=${jenkinsImage ? jenkinsImage.imageUri : JENKINS_DEFAULT_IMAGE}
-export JENKINS_HOSTNAME=${props.hostName}
-
-# login to ecr - needed for custom jenkins images
-aws ecr get-login-password --region ${stackRegion} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${stackRegion}.amazonaws.com
-
-# deploy docker stack
-docker stack deploy --with-registry-auth -c stack.yml stack
+## jenkins
+docker run \
+  --name jenkins \
+  --rm \
+  --detach \
+  --privileged \
+  --network traefik-public \
+  --env DOCKER_HOST=tcp://docker:2376 \
+  --env DOCKER_CERT_PATH=/certs/client \
+  --env DOCKER_TLS_VERIFY=1 \
+  --publish 8080:8080 \
+  --publish 50000:50000 \
+  --volume /data/jenkins:/var/jenkins_home \
+  --volume /certs/jenkins:/certs/client:ro \
+  --label traefik.enable=true \
+  --label traefik.http.routers.jenkins-web.rule=Host(\`${props.hostName}\`) \
+  --label traefik.http.routers.jenkins-web.entrypoints=websecure \
+  --label traefik.http.routers.jenkins-web.tls.certresolver=letsencryptresolver \
+  --label traefik.http.services.jenkins-web.loadbalancer.server.port=8080 \
+  $JENKINS_IMAGE
 `;
 
     init.addConfig('install_jenkins_stack', new ec2.InitConfig([
